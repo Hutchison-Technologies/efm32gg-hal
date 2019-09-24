@@ -63,7 +63,7 @@ where
         // FIXME: If we can show that all the above calculation can be done in LTO, then I'd be
         // much more comfortable adding logic that goes into loops for sleeps exceeding one systick
         // wrap (which is about 2s on typical 14MHz devices).
-        assert!(ticks < (1 << 24));
+        //assert!(ticks < (1 << 24));
 
         self.systick.registerblock.set_reload(ticks);
         self.systick.registerblock.clear_current();

@@ -168,12 +168,12 @@ impl TimerChannel<$TimerN, $ChannelX> {
         });
     }
     fn get_mode(&self) -> ChannelMode {
-        use registers::$timerN::$ccX_ctrl::MODER;
-        match unsafe { &*Self::register() }.$ccX_ctrl.read().mode() {
-            MODER::OFF => ChannelMode::Off,
-            MODER::INPUTCAPTURE => ChannelMode::InputCapture,
-            MODER::OUTPUTCOMPARE => ChannelMode::OutputCompare,
-            MODER::PWM => ChannelMode::Pwm,
+        use registers::$timerN::$ccX_ctrl::MODE_A;
+        match unsafe { &*Self::register() }.$ccX_ctrl.read().mode().variant() {
+            MODE_A::OFF => ChannelMode::Off,
+            MODE_A::INPUTCAPTURE => ChannelMode::InputCapture,
+            MODE_A::OUTPUTCOMPARE => ChannelMode::OutputCompare,
+            MODE_A::PWM => ChannelMode::Pwm,
         }
     }
 
