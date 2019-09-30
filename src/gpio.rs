@@ -149,6 +149,8 @@ macro_rules! gpio {
         }
 
         pub struct Pins {
+            pub routepen: RoutePEN,
+            pub routeloc0: RouteLoc0,
             $(
                 pub $pxi: pins::$PXi<Disabled>,
             )+
@@ -163,12 +165,36 @@ macro_rules! gpio {
                 gpioclk.enable();
 
                 Pins {
+                    routepen: RoutePEN { _private: ()},
+                    routeloc0: RouteLoc0 { _private: () },
                     $(
                         $pxi: pins::$PXi { _mode: PhantomData },
                     )+
                 }
             }
         }
+    }
+}
+
+pub struct RoutePEN {
+    _private: (),
+}
+
+impl RoutePEN {
+    pub fn enable_swvpen(&mut self) {
+        let gpio = sneak_into_gpio();
+        gpio.routepen.write(|w| w.swvpen().bit(true));
+    }
+}
+
+pub struct RouteLoc0 {
+    _private: (),
+}
+
+impl RouteLoc0 {
+    pub fn set_swv_loc0(&mut self) {
+        let gpio = sneak_into_gpio();
+        gpio.routeloc0.write(|w| w.swvloc().loc0());
     }
 }
 

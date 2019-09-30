@@ -46,6 +46,10 @@ pub struct Clocks {
     pub hfcoreclk: HFCoreClk,
     pub i2c0: I2C0Clk,
     pub gpio: GPIOClk,
+    pub oscencmd: OSCCmd,
+    pub hfclksel: HFClkSel,
+    pub status: Status,
+    // pub dbg: DBGClk,
     pub timer0: TIMER0Clk,
     pub timer1: TIMER1Clk,
     #[cfg(feature = "_has_timer2")]
@@ -110,8 +114,68 @@ impl GPIOClk {
             cmu.hfperclken0.modify(|_, w| w.gpio().bit(true));
             #[cfg(feature = "chip-efr32xg1")]
             cmu.hfbusclken0.modify(|_, w| w.gpio().bit(true));
-            #[cfg(feature = "chip-efr32fg1p")]
+            #[cfg(feature = "chip-efr32mg12")]
             cmu.hfbusclken0.modify(|_, w| w.gpio().bit(true));
+        }
+    }
+}
+
+pub struct HFClkSel {
+    _private: (),
+}
+
+impl HFClkSel {
+    pub fn select_hfxo(&mut self) {
+        unsafe {
+            let cmu = &*registers::CMU::ptr();
+            #[cfg(feature = "chip-efr32mg12")]
+            cmu.hfclksel.write(|w| w.hf().hfxo());
+        }
+    }
+}
+
+pub struct OSCCmd {
+    _private: (),
+}
+
+impl OSCCmd {
+    pub fn enable_hfxo(&mut self) {
+        unsafe {
+            let cmu = &*registers::CMU::ptr();
+            #[cfg(feature = "chip-efr32mg12")]
+            cmu.oscencmd.write(|w| w.hfxoen().bit(true));
+        }
+    }
+
+    pub fn enable_lfxo(&mut self) {
+        unsafe {
+            let cmu = &*registers::CMU::ptr();
+            #[cfg(feature = "chip-efr32mg12")]
+            cmu.oscencmd.write(|w| w.lfxoen().bit(true));
+        }
+    }
+
+    pub fn enable_auxhfrco(&mut self) {
+        unsafe {
+            let cmu = &*registers::CMU::ptr();
+            #[cfg(feature = "chip-efr32mg12")]
+            cmu.oscencmd.write(|w| w.auxhfrcoen().bit(true));
+        }
+    }
+}
+
+pub struct Status {
+    _private: (),
+}
+
+impl Status {
+    pub fn wait_for_auxhfrco(&mut self) {
+        unsafe {
+            let cmu = &*registers::CMU::ptr();
+            let mut rdy = false;
+            while !rdy {
+                rdy = cmu.status.read().auxhfrcordy().bit();
+            }
         }
     }
 }
@@ -122,6 +186,9 @@ impl Cmu {
             hfcoreclk: HFCoreClk { _private: () },
             i2c0: I2C0Clk { _private: () },
             gpio: GPIOClk { _private: () },
+            oscencmd: OSCCmd { _private: () },
+            hfclksel: HFClkSel { _private: () },
+            status: Status { _private: () },
             timer0: TIMER0Clk { _private: () },
             timer1: TIMER1Clk { _private: () },
             #[cfg(feature = "_has_timer2")]
@@ -148,9 +215,9 @@ impl FrozenClock for HFCoreClk {
         {
             Hertz(19_000_000)
         }
-        #[cfg(feature = "chip-efr32fg1p")]
+        #[cfg(feature = "chip-efr32mg12")]
         {
-            Hertz(26_000_000)
+            Hertz(25_000_000)
         }
     }
 }

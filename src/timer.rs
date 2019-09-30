@@ -73,6 +73,11 @@ use super::*;
 use crate::cmu;
 use registers;
 
+#[cfg(feature = "chip-efr32mg12")]
+type UnsignedType = u32;
+#[cfg(not(feature = "chip-efr32mg12"))]
+type UnsignedType = u16;
+
 impl TimerExt<cmu::$TIMERnClk, $TimerN> for registers::$TIMERn {
     fn with_clock(self, mut clock: cmu::$TIMERnClk) -> $TimerN {
         clock.enable();
@@ -89,7 +94,7 @@ impl $TimerN {
     /// Configure the top value for this timer.
     ///
     /// As this limits the duty cycle, it can be read back using the PWM method get_max_duty().
-    pub fn set_top(&mut self, top: u16) {
+    pub fn set_top(&mut self, top: UnsignedType) {
         self.register.top.modify(|_, w| unsafe { w.top().bits(top) });
     }
 
@@ -177,19 +182,19 @@ impl TimerChannel<$TimerN, $ChannelX> {
         }
     }
 
-    fn set_compare_buffered(&mut self, compare: u16) {
+    fn set_compare_buffered(&mut self, compare: UnsignedType) {
         // Unsafe: OK because it's a CC0 register (see .register())
         // Unsafe around bits: OK because any u16 value is permissible there
         unsafe { &mut *Self::register() }.$ccX_ccvb.modify(|_, w| unsafe { w.ccvb().bits(compare) });
     }
 
-    fn set_compare_unbuffered(&mut self, compare: u16) {
+    fn set_compare_unbuffered(&mut self, compare: UnsignedType) {
         // Unsafe: OK because it's a CC0 register (see .register())
         // Unsafe around bits: OK because any u16 value is permissible there
         unsafe { &mut *Self::register() }.$ccX_ccv.modify(|_, w| unsafe { w.ccv().bits(compare) });
     }
 
-    fn get_compare_buffered(&self) -> u16 {
+    fn get_compare_buffered(&self) -> UnsignedType {
         // Unsafe: OK because it's a CC0 register (see .register())
         unsafe { &mut *Self::register() }.$ccX_ccvb.read().ccvb().bits()
     }
@@ -199,7 +204,7 @@ impl TimerChannel<$TimerN, $ChannelX> {
     ///
     /// This is a very conservative interface, and expected to be replaced once the author figures
     /// out how to expose the various possible use cases in a safe way.
-    pub fn prepare_interrupts(mut self, compare: u16) {
+    pub fn prepare_interrupts(mut self, compare: UnsignedType) {
         self.set_compare_buffered(compare);
         self.set_mode(ChannelMode::OutputCompare);
         self.interrupt_enable();
@@ -251,7 +256,7 @@ impl<P> RoutedTimerChannel<$TimerN, $ChannelX, P> {
 }
 
 impl<P> embedded_hal::PwmPin for RoutedTimerChannel<$TimerN, $ChannelX, P> {
-    type Duty = u16; // FIXME check the extreme behaviors
+    type Duty = UnsignedType; // FIXME check the extreme behaviors
 
     fn enable(&mut self) {
         self.channel.set_mode(ChannelMode::Pwm);

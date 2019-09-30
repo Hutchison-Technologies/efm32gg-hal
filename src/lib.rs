@@ -5,8 +5,8 @@ extern crate embedded_hal;
 
 #[cfg(feature = "chip-efm32gg")]
 extern crate efm32gg990 as registers;
-#[cfg(feature = "chip-efr32fg1p")]
-extern crate efr32fg1p_pac as registers;
+#[cfg(feature = "chip-efr32mg12")]
+extern crate efr32mg12_pac as registers;
 #[cfg(feature = "chip-efr32xg1")]
 extern crate efr32xg1 as registers;
 
@@ -14,6 +14,7 @@ pub mod time_util;
 
 pub mod cmu;
 pub mod gpio;
+pub mod emu;
 
 // Right now that's implemented only there, and does not have the internal cfgs yet to run on
 // efm32gg as well

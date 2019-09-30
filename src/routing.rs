@@ -20,5 +20,5 @@ mod per_peripheral;
 mod efm32gg;
 #[cfg(feature = "chip-efr32xg1")]
 mod efr32xg1;
-#[cfg(feature = "chip-efr32fg1p")]
-mod efr32xg1;
+#[cfg(feature = "chip-efr32mg12")]
+mod efr32xg12;
