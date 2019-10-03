@@ -6,7 +6,7 @@
         {
             "type": "shell",
             "label": "cargo check",
-            "command": "cargo check",
+            "command": "cargo check --features \"chip-efr32mg12\"",
             "problemMatcher": [
                 "$rustc"
             ],
