@@ -15,6 +15,7 @@ impl EMUExt for registers::EMU {
 pub struct Ems {
     pub power_cfg: PwrCfg,
     pub dcdc_ctrl: DCDCCtrl,
+    pub status: Status,
 }
 
 pub struct Emu {
@@ -49,11 +50,32 @@ impl PwrCfg {
     }
 }
 
+pub struct Status {
+    _private: (),
+}
+
+impl Status {
+    pub fn is_vscale_busy(&self) -> bool {
+        unsafe {
+            let emu = &*registers::EMU::ptr();
+            emu.status.read().vscalebusy().bit()
+        }
+    }
+
+    pub fn is_vscale2(&self) -> bool {
+        unsafe {
+            let emu = &*registers::EMU::ptr();
+            emu.status.read().vscale().is_vscale2()
+        }
+    }
+}
+
 impl Emu {
     pub fn split(self) -> Ems {
         Ems {
             power_cfg: PwrCfg { _private: () },
             dcdc_ctrl: DCDCCtrl { _private: () },
+            status: Status { _private: () },
         }
     }
 }
