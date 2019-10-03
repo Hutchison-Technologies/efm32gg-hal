@@ -16,6 +16,9 @@ pub mod cmu;
 pub mod gpio;
 pub mod emu;
 
+#[cfg(feature = "chip-efr32mg12")]
+pub mod msc;
+
 // Right now that's implemented only there, and does not have the internal cfgs yet to run on
 // efm32gg as well
 #[cfg(feature = "chip-efr32xg1")]
