@@ -9,8 +9,9 @@
 use registers;
 
 use super::cmu;
+use core::convert::Infallible;
 use core::marker::PhantomData;
-use embedded_hal::digital;
+use embedded_hal::digital::v2::{InputPin, OutputPin, StatefulOutputPin};
 
 use crate::bitband;
 
@@ -29,7 +30,7 @@ pub trait GPIOExt {
 /// output can be driven, one for input can be queried), the trait is not implemented by a single
 /// struct for a pin but qualified by a parameterized struct whose expressions implement different
 /// traits; for example, PA0<T> implements EFM32Pin for all T, and configurin it as an output pin
-/// with `.as_output()` makes it into a PA0<Output> which implements digital::OutputPin.
+/// with `.as_output()` makes it into a PA0<Output> which implements OutputPin.
 ///
 /// Currently, not all information about a pin is encoded in its type (For example, as_output and
 /// as_opendrain produce the same type), that may change just by adding an InputOutput
@@ -39,26 +40,26 @@ pub trait GPIOExt {
 pub trait EFM32Pin {
     type Disabled;
     #[cfg(not(feature = "unproven"))]
-    type Output: digital::OutputPin;
+    type Output: OutputPin;
     #[cfg(feature = "unproven")]
-    type Output: digital::OutputPin + digital::StatefulOutputPin;
-    type Input: digital::InputPin;
+    type Output: OutputPin + StatefulOutputPin;
+    type Input: InputPin;
 
     /// Convert the pin into an output pin. The original pin, however configured, is consumed, the
     /// hardware configuration changed to drive high or low, and returned as a pin that implements
-    /// embedded_hal::digital::OutputPin.
+    /// embedded_hal::OutputPin.
     fn as_output(self: Self) -> Self::Output;
 
     /// Convert the pin into an open drain (wired "and") pin. The original pin, however configured,
     /// is consumed, the hardware configuration changed to only drive low, and returned as a pin
-    /// that implements embedded_hal::digital::OutputPin (and should later implement InputPin too,
+    /// that implements embedded_hal::OutputPin (and should later implement InputPin too,
     /// buit that needs some thinking-through anyway w/rt how much of the configure state should be
     /// in the typ).
     fn as_opendrain(self: Self) -> Self::Output;
 
     /// Convert the pin into an input pin. The original pin, however configured, is consumed, the
     /// hardware configuration changed to input with no pull-up- or down resistors, and returned as
-    /// a pin that implements embedded_hal::digital::InputPin.
+    /// a pin that implements embedded_hal::InputPin.
     fn as_input(self: Self) -> Self::Input;
 }
 
@@ -70,7 +71,6 @@ macro_rules! gpio {
     ([$($PXi:ident: ($pxi:ident, $i:expr, $px_din:ident, $px_dout:ident, $modei:ident, $px_modehl:ident),)+]) => {
 
         pub mod pins {
-            use embedded_hal::digital;
             use core::marker::PhantomData;
             use super::*;
 
@@ -79,8 +79,9 @@ macro_rules! gpio {
                     pub(super) _mode: PhantomData<Mode>,
                 }
 
-                impl digital::OutputPin for $PXi<Output> {
-                    fn set_low(self: &mut Self) {
+                impl OutputPin for $PXi<Output> {
+                    type Error = Infallible;
+                    fn set_low(self: &mut Self) -> Result<(), Self::Error> {
                         // This implementation uses bit-banding on all EFx32 devices. EFM2 would
                         // have explicit set/clear registers, but bit-banding is available there
                         // too and I don't expect any performance difference.
@@ -89,35 +90,36 @@ macro_rules! gpio {
                         // unsafe: We "own" that pin and thus that bit in the register, and
                         // bit-band writing is atomic even though others might access the register
                         // simultaneously.
-                        unsafe { bitband::change_bit(&gpio.$px_dout, $i, false); }
+                        Ok(unsafe { bitband::change_bit(&gpio.$px_dout, $i, false); })
                     }
 
-                    fn set_high(self: &mut Self) {
+                    fn set_high(self: &mut Self) -> Result<(), Self::Error> {
                         // see comments on set_low
                         let gpio = sneak_into_gpio();
-                        unsafe { bitband::change_bit(&gpio.$px_dout, $i, true); }
+                        Ok(unsafe { bitband::change_bit(&gpio.$px_dout, $i, true); })
                     }
                 }
                 #[cfg(feature = "unproven")]
-                impl digital::StatefulOutputPin for $PXi<Output> {
-                    fn is_set_low(self: &Self) -> bool {
+                impl StatefulOutputPin for $PXi<Output> {
+                    fn is_set_low(self: &Self) -> Result<bool, Self::Error> {
                         let gpio = sneak_into_gpio();
-                        gpio.$px_dout.read().bits() & (1 << $i) == 0
+                        Ok(gpio.$px_dout.read().bits() & (1 << $i) == 0)
                     }
 
-                    fn is_set_high(self: &Self) -> bool {
-                        !self.is_set_low()
+                    fn is_set_high(self: &Self) -> Result<bool, Self::Error> {
+                        self.is_set_low().map(|v| !v)
                     }
                 }
                 #[cfg(feature = "unproven")]
-                impl digital::InputPin for $PXi<Input> {
-                    fn is_low(self: &Self) -> bool {
+                impl InputPin for $PXi<Input> {
+                    type Error = Infallible;
+                    fn is_low(self: &Self) -> Result<bool, Self::Error> {
                         let gpio = sneak_into_gpio();
-                        gpio.$px_din.read().bits() & (1 << $i) == 0
+                        Ok(gpio.$px_din.read().bits() & (1 << $i) == 0)
                     }
 
-                    fn is_high(self: &Self) -> bool {
-                        !self.is_low()
+                    fn is_high(self: &Self) -> Result<bool, Self::Error> {
+                        self.is_low().map(|v| !v)
                     }
                 }
 
