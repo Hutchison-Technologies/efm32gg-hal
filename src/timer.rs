@@ -51,7 +51,7 @@ impl<T, C, P> RoutedTimerChannel<T, C, P> where
     ///
     /// It does, however, disable the channel, for otherwise the pin would stay influenced by a now
     /// unrelated peripheral.
-    pub fn unroute(mut self) -> (TimerChannel<T, C>, P) {
+    pub fn unroute(self) -> (TimerChannel<T, C>, P) {
         unsafe { P::deconfigure() };
 
         (self.channel, self.pin)
@@ -81,13 +81,13 @@ type UnsignedType = u16;
 impl TimerExt<cmu::$TIMERnClk, $TimerN> for registers::$TIMERn {
     fn with_clock(self, mut clock: cmu::$TIMERnClk) -> $TimerN {
         clock.enable();
-        $TimerN { register: self, clock }
+        $TimerN { register: self, _clock: clock }
     }
 }
 
 pub struct $TimerN {
     pub(crate) register: registers::$TIMERn,
-    clock: cmu::$TIMERnClk,
+    _clock: cmu::$TIMERnClk,
 }
 
 impl $TimerN {
