@@ -29,7 +29,7 @@ embedded-hal = { version = "0.2.3", features = ["unproven"] }
 
 efm32gg990 = { version = "0.1.2", optional = true }
 efr32xg1 = { version = "0.2.0", optional = true }
-efr32mg12-pac = { version = "0.1.0", optional = true, path = "../efr32mg12-pac" }
+efr32mg12p-pac = { version = "0.1.0", optional = true, path = "../efr32mg12p-pac" }
 
 [features]
 default = ["unproven" ]
@@ -41,7 +41,7 @@ _routing_per_function = []
 
 chip-efm32gg = [ "efm32gg990", "_has_timer2", "_has_timer3" ]
 chip-efr32xg1 = [ "efr32xg1", "_routing_per_function" ]
-chip-efr32mg12 = [ "efr32mg12-pac", "_routing_per_function" ]
+chip-efr32mg12 = [ "efr32mg12p-pac", "_routing_per_function" ]
 # Marker features pulled in by the individual chip features. Enabling them
 # manually results in build-time errors (as clocks or peripherals are accessed
 # that are not available).

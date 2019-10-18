@@ -6,7 +6,7 @@ extern crate embedded_hal;
 #[cfg(feature = "chip-efm32gg")]
 extern crate efm32gg990 as registers;
 #[cfg(feature = "chip-efr32mg12")]
-extern crate efr32mg12_pac as registers;
+extern crate efr32mg12p_pac as registers;
 #[cfg(feature = "chip-efr32xg1")]
 extern crate efr32xg1 as registers;
 
