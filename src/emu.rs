@@ -42,10 +42,11 @@ pub struct PwrCfg {
 }
 
 impl PwrCfg {
-    pub fn enable(&mut self) {
+    pub fn dcdc_to_dvdd(&mut self) {
         unsafe {
             let emu = &*registers::EMU::ptr();
             emu.pwrcfg.write(|w| w.pwrcfg().dcdctodvdd());
+            emu.pwrctrl.write(|w| w.regpwrsel().bit(true));
         }
     }
 }

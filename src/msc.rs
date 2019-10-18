@@ -9,6 +9,8 @@ pub struct Msc {
     pub write_cmd: WriteCmd,
     pub addrb: AddrB,
     pub wdata: WData,
+    pub cachecmd: CacheCmd,
+    pub ctrl: Ctrl,
 }
 
 pub trait MSCExt {
@@ -24,6 +26,34 @@ impl MSCExt for registers::MSC {
             write_cmd: WriteCmd { _private: () },
             addrb: AddrB { _private: () },
             wdata: WData { _private: () },
+            cachecmd: CacheCmd { _private: () },
+            ctrl: Ctrl { _private: () },
+        }
+    }
+}
+
+pub struct Ctrl {
+    _private: (),
+}
+
+impl Ctrl {
+    pub fn init(&mut self) {
+        unsafe {
+            let msc = &*registers::MSC::ptr();
+            msc.ctrl.write(|w| w.bits(1u32  << 8));
+        }
+    }
+}
+
+pub struct CacheCmd {
+    _private: (),
+}
+
+impl CacheCmd {
+    pub fn invalidate_cache(&self) {
+        unsafe {
+            let msc = &*registers::MSC::ptr();
+            msc.cachecmd.write(|w| w.invcache().bit(true));
         }
     }
 }
@@ -156,7 +186,7 @@ impl WriteCmd {
     }
 
     pub fn write_end(&self) {
-        unsafe { 
+        unsafe {
             let msc = &*registers::MSC::ptr();
             msc.writecmd.write(|w| w.writeend().bit(true));
         }
