@@ -15,6 +15,7 @@ pub mod time_util;
 pub mod cmu;
 pub mod gpio;
 pub mod emu;
+pub mod nvic;
 
 #[cfg(feature = "chip-efr32mg12")]
 pub mod msc;
